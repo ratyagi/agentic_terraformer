@@ -81,3 +81,5 @@ def _convert_region_row(row: Dict[str, str]) -> Dict:
     try:
         population = int(row.get("population", "0"))
     except ValueError:
+        population = 0
+
