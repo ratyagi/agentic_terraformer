@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from core.config import MEMORY_DIR, SESSIONS_DIR
+from core.config import MEMORY_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -37,15 +37,25 @@ def save_report(session_id: str, report: Dict[str, Any]) -> None:
 
 def load_report(session_id: str) -> Optional[Dict[str, Any]]:
     """
-    Load a report dict for a given session. Returns None if not found.
+    Load a report dict for a given session. Returns None if not found
+    or if the file is corrupted / not valid JSON.
     """
     path = _report_path(session_id)
     if not path.exists():
         logger.warning("Report not found for session %s", session_id)
         return None
 
-    with path.open("r", encoding="utf-8") as f:
-        report = json.load(f)
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            report = json.load(f)
+    except json.JSONDecodeError as e:
+        logger.error(
+            "Failed to decode report JSON for session %s at %s: %s",
+            session_id,
+            path,
+            e,
+        )
+        return None
 
     logger.info("Loaded report for session %s from %s", session_id, path)
     return report
