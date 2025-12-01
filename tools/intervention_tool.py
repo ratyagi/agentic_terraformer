@@ -7,7 +7,6 @@ Utility functions for loading the catalog of possible interventions.
 
 import csv
 import logging
-from pathlib import Path
 from typing import Dict
 
 from core.config import DATA_DIR
@@ -19,14 +18,14 @@ INTERVENTIONS_FILE = DATA_DIR / "interventions.csv"
 
 def _ensure_sample_interventions_file() -> None:
     """
-    If interventions.csv does not exist, create a small sample file so the
+    If interventions.csv does not exist OR is empty, create a small sample file so the
     system can run without manual setup.
     """
-    if INTERVENTIONS_FILE.exists():
+    if INTERVENTIONS_FILE.exists() and INTERVENTIONS_FILE.stat().st_size > 0:
         return
 
     logger.warning(
-        "interventions.csv not found, creating a sample file at %s",
+        "interventions.csv missing or empty, creating a sample file at %s",
         INTERVENTIONS_FILE,
     )
 
@@ -74,23 +73,6 @@ def _ensure_sample_interventions_file() -> None:
             writer.writerow(row)
 
 
-def load_interventions() -> Dict[str, Dict]:
-    """
-    Load interventions from interventions.csv as a mapping from id -> dict.
-    """
-    _ensure_sample_interventions_file()
-
-    catalog: Dict[str, Dict] = {}
-    with INTERVENTIONS_FILE.open("r", newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            iv_id = row["id"]
-            catalog[iv_id] = _convert_intervention_row(row)
-
-    logger.info("Loaded %d interventions from %s", len(catalog), INTERVENTIONS_FILE)
-    return catalog
-
-
 def _convert_intervention_row(row: Dict[str, str]) -> Dict:
     """
     Convert CSV strings to numeric types and normalized structure.
@@ -110,3 +92,20 @@ def _convert_intervention_row(row: Dict[str, str]) -> Dict:
         "job_impact_percent_per_unit": _float("job_impact_percent_per_unit"),
     }
     return iv
+
+
+def load_interventions() -> Dict[str, Dict]:
+    """
+    Load interventions from interventions.csv as a mapping from id -> dict.
+    """
+    _ensure_sample_interventions_file()
+
+    catalog: Dict[str, Dict] = {}
+    with INTERVENTIONS_FILE.open("r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            iv_id = row["id"]
+            catalog[iv_id] = _convert_intervention_row(row)
+
+    logger.info("Loaded %d interventions from %s", len(catalog), INTERVENTIONS_FILE)
+    return catalog
