@@ -1,1 +1,28 @@
+# Core Python runtime
+python-dateutil>=2.9.0
+typing-extensions>=4.8.0
+
+# Web/UI framework
+streamlit>=1.39.0
+
+# Data handling
+pandas>=2.2.0
+numpy>=1.26.0
+
+# Logging and utilities
+rich>=13.7.0
+
+# Optional but useful for structured configuration and safer I/O
+pyyaml>=6.0.1
+
+# For environment variable management (optional but handy)
+python-dotenv>=1.0.0
+
+# If you later integrate Gemini API or any LLM SDK (Google AI Intensive)
+google-generativeai>=0.6.0
+
+# Testing & linting (optional but good practice)
+pytest>=8.2.0
+black>=24.4.0
+flake8>=7.0.0
 
