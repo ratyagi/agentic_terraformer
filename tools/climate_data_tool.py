@@ -19,13 +19,14 @@ REGIONS_FILE = DATA_DIR / "regions.csv"
 
 def _ensure_sample_regions_file() -> None:
     """
-    If regions.csv does not exist, create a small sample file so the
+    If regions.csv does not exist OR is empty, create a small sample file so the
     system can run end-to-end without manual setup.
     """
-    if REGIONS_FILE.exists():
+    # If file exists but is empty, treat it as missing
+    if REGIONS_FILE.exists() and REGIONS_FILE.stat().st_size > 0:
         return
 
-    logger.warning("regions.csv not found, creating a sample file at %s", REGIONS_FILE)
+    logger.warning("regions.csv missing or empty, creating a sample file at %s", REGIONS_FILE)
 
     sample_rows = [
         {
