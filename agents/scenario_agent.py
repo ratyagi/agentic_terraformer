@@ -40,6 +40,11 @@ class ScenarioAgent:
         interventions_catalog = load_interventions()
         scenarios = self._generate_scenarios(policy, region, interventions_catalog)
 
+        if not scenarios:
+            logger.error("ScenarioAgent could not generate any scenarios (no interventions available).")
+            # You could notify ReportAgent here with a failure, but for now we just stop.
+            return
+
         # Inform EvaluationAgent how many scenarios to expect
         count_msg = AgentMessage(
             sender="ScenarioAgent",
@@ -79,15 +84,21 @@ class ScenarioAgent:
     ) -> List[Dict[str, Any]]:
         """
         Simple scenario generator: randomly sample intervention combinations.
-
-        You can make this much smarter with LLM guidance later.
         """
         all_ids = list(interventions_catalog.keys())
         random.shuffle(all_ids)
 
+        if not all_ids:
+            logger.error("No interventions available to generate scenarios.")
+            return []
+
+        # Clamp min/max based on available interventions
+        max_actions_available = max(1, min(self.max_actions, len(all_ids)))
+        min_actions = min(self.min_actions, max_actions_available)
+
         scenarios: List[Dict[str, Any]] = []
         for i in range(self.num_scenarios):
-            num_actions = random.randint(self.min_actions, min(self.max_actions, len(all_ids)))
+            num_actions = random.randint(min_actions, max_actions_available)
             chosen_ids = random.sample(all_ids, num_actions)
 
             actions = []
@@ -103,19 +114,4 @@ class ScenarioAgent:
 
         logger.debug("ScenarioAgent generated scenarios: %s", scenarios)
         return scenarios
-[
-  {
-    "scenario_id": "S1",
-    "actions": [
-      {"id": "EV_SUBSIDY", "scale": "high"},
-      {"id": "PUBLIC_TRANSIT_EXPANSION", "scale": "medium"}
-    ]
-  },
-  {
-    "scenario_id": "S2",
-    "actions": [
-      {"id": "BUILDING_RETROFIT", "scale": "high"},
-      {"id": "CARBON_TAX", "scale": "low"}
-    ]
-  }
-]
+
